@@ -30,7 +30,7 @@ const getUserTypes = async () => {
   return rows;
 };
 
-const getAuthenticatedUser = async credentials => {
+const getAuthenticatedUser = async (credentials) => {
   if (connection == null) {
     throw new Error("could not connect to database");
   }
@@ -39,33 +39,34 @@ const getAuthenticatedUser = async credentials => {
     credentials.password,
   ]);
 
-  return rows[0];
+  return rows[0][0];
 };
 
 const savePropertyImage = async (propertyId, buffer) => {
-  const [result] = await connection.execute("CALL AddPropertyImage(?,BINARY(?));", [
-    propertyId,
-    buffer,
-  ]);
+  const [result] = await connection.execute(
+    "CALL AddPropertyImage(?,BINARY(?));",
+    [propertyId, buffer]
+  );
   return result;
 };
 
-const getPropertyImages = async propertyId => {
-  const [rows] = await connection.execute("SELECT * FROM Images where propert_id = ?", [
-    propertyId,
-  ]);
+const getPropertyImages = async (propertyId) => {
+  const [rows] = await connection.execute(
+    "SELECT * FROM Images where propert_id = ?",
+    [propertyId]
+  );
 
   return rows[0];
 };
 
-const getListings = async args => {
+const getListings = async (args) => {
   const params = [args.userId, args.pageSize, args.skipRows];
   const [rows] = await connection.execute("CALL GetListings(?,?,?)", params);
 
   return rows[0];
 };
 
-const createProperty = async params => {
+const createProperty = async (params) => {
   const record = {
     title: params.title,
     description: params.description,

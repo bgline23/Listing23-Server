@@ -13,15 +13,12 @@ router.post("/login", async (req, res) => {
       username: req.body.username,
       password: req.body.password,
     };
-
     const encryptedPass = encrypt(credentials.password);
     const userResult = await db.getAuthenticatedUser({
       ...credentials,
       password: encryptedPass,
     });
-
-    console.log(credentials);
-    if (userResult.length !== 1) {
+    if (!userResult?.username) {
       res.status(401).send("Invalid credentials, please try again");
     }
 
