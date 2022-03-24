@@ -11,18 +11,18 @@ const key = crypto
 
 const initVector = key.substring(0, 16);
 
-function encrypt(text) {
-  //var cipher = crypto.createCipheriv(algorithm, key, "vectorvector1234");
+const encrypt = text => {
   const cipher = crypto.createCipheriv(algorithm, key, initVector);
   let crypted = cipher.update(text, "utf8", "hex");
   crypted += cipher.final("hex");
   return crypted;
-}
-function decrypt(text) {
+};
+
+const decrypt = text => {
   const decipher = crypto.createDecipheriv(algorithm, key, initVector);
   let dec = decipher.update(text, "hex", "utf8");
   dec += decipher.final("utf8");
   return dec;
-}
+};
 
 export { encrypt, decrypt };

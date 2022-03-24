@@ -39,7 +39,6 @@ router.post("/login", async (req, res) => {
 router.post("/loginToken", async (req, res) => {
   try {
     const token = req.body.token;
-    console.log("token ->", token);
     if (token) {
       jwt.verify(token, process.env.API_SECRET, (error, authData) => {
         if (error) {
@@ -47,7 +46,7 @@ router.post("/loginToken", async (req, res) => {
           return res.status(403).send(error.message);
         }
         const user = JSON.parse(decrypt(authData.token));
-        console.log(user);
+
         return res.json({ user, token, success: true });
       });
     } else {

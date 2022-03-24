@@ -63,7 +63,6 @@ router.post("/image/save_image", async (req, res) => {
 
 router.post("/create", async (req, res) => {
   const requestData = req.body;
-  console.log("requestData ->", requestData);
   try {
     const saveResult = await db.createProperty(requestData);
 

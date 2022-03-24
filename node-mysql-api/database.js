@@ -13,12 +13,11 @@ try {
     multipleStatements: true,
   };
 
-  //console.log(connectionOptions);
-
   connection = await mysql.createConnection(connectionOptions);
 } catch (error) {
   console.log(error.message);
   console.log("Could not connect to databse with options: ", connectionOptions);
+  process.exit(1);
 }
 
 // query database
@@ -30,7 +29,7 @@ const getUserTypes = async () => {
   return rows;
 };
 
-const getAuthenticatedUser = async (credentials) => {
+const getAuthenticatedUser = async credentials => {
   if (connection == null) {
     throw new Error("could not connect to database");
   }
@@ -43,30 +42,29 @@ const getAuthenticatedUser = async (credentials) => {
 };
 
 const savePropertyImage = async (propertyId, buffer) => {
-  const [result] = await connection.execute(
-    "CALL AddPropertyImage(?,BINARY(?));",
-    [propertyId, buffer]
-  );
+  const [result] = await connection.execute("CALL AddPropertyImage(?,BINARY(?));", [
+    propertyId,
+    buffer,
+  ]);
   return result;
 };
 
-const getPropertyImages = async (propertyId) => {
-  const [rows] = await connection.execute(
-    "SELECT * FROM Images where propert_id = ?",
-    [propertyId]
-  );
+const getPropertyImages = async propertyId => {
+  const [rows] = await connection.execute("SELECT * FROM Images where propert_id = ?", [
+    propertyId,
+  ]);
 
   return rows[0];
 };
 
-const getListings = async (args) => {
+const getListings = async args => {
   const params = [args.userId, args.pageSize, args.skipRows];
   const [rows] = await connection.execute("CALL GetListings(?,?,?)", params);
 
   return rows[0];
 };
 
-const createProperty = async (params) => {
+const createProperty = async params => {
   const record = {
     title: params.title,
     description: params.description,
@@ -87,6 +85,27 @@ const createProperty = async (params) => {
   return result[0];
 };
 
+const registerUser = async args => {
+  const params = {
+    user_type: args.userTypeId,
+    first_name: args.firstName,
+    last_name: args.lastName,
+    cellphone: args.cellphone,
+    email: args.email,
+    username: args.username,
+    password: args.password,
+  };
+
+  const procParams = Object.values(params);
+
+  const [result] = await connection.execute(
+    "CALL CreateUser(?,?,?,?,?,?,?);",
+    procParams
+  );
+
+  return result?.[0]?.[0];
+};
+
 export {
   getUserTypes,
   getAuthenticatedUser,
@@ -94,4 +113,5 @@ export {
   getPropertyImages,
   createProperty,
   getListings,
+  registerUser,
 };

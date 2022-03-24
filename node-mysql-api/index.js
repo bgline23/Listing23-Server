@@ -4,7 +4,7 @@ dotenv.config();
 import express from "express";
 
 import * as db from "./database.js";
-import { router as Buyer } from "./routes/Buyer.js";
+import { router as User } from "./routes/User.js";
 import { router as Authentication } from "./routes/Authentication.js";
 import { router as Property } from "./routes/Property.js";
 import Logger from "./middleware/Logger.js";
@@ -24,6 +24,7 @@ app.use(express.json({ limit: "2mb" }));
 //   route handlers
 app.use("/authenticate", Authentication);
 app.use("/property", Property);
+app.use("/user", User);
 
 app.get("/", async (req, res) => {
   try {

@@ -155,4 +155,87 @@ BEGIN
 
 END $$
 
+-- **************************************
+
+DROP PROCEDURE IF EXISTS CreateUser;
+
+CREATE PROCEDURE CreateUser
+(
+    IN user_type    INT,
+    IN first_name   VARCHAR(40),
+    IN last_name    VARCHAR(40),
+    IN cellphone    VARCHAR(15),
+    IN email        VARCHAR(40),
+    IN username     VARCHAR(18),
+    IN password     CHAR(32)
+)
+BEGIN
+--  Verify user type
+    IF NOT EXISTS (SELECT user_type_id FROM UserType WHERE user_type_id = user_type) 
+    THEN
+        SET @msg = CONCAT('Invalid user type ID: ', user_type);
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = @msg;
+    END IF;
+
+--  Verify user does not exist
+    IF EXISTS (SELECT user_id FROM User u WHERE u.email = email) 
+    THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Email address already exists';
+    END IF;
+
+    IF EXISTS (SELECT user_id FROM User u WHERE u.username = username) 
+    THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Username already exists';
+    END IF;
+
+--  Verify fields are valid
+    IF CHAR_LENGTH(TRIM(first_name)) < 2 OR first_name REGEXP '[0-9]'
+    THEN
+         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Provide a valid first name';
+    END IF;
+
+    IF CHAR_LENGTH(TRIM(last_name)) < 2 OR last_name REGEXP '[0-9]' THEN
+         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Provide a valid last name';
+    END IF;
+
+    IF CHAR_LENGTH(TRIM(email)) < 6  THEN
+         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Provide a valid email address';
+    END IF;
+
+    SET @generate_username =  CASE TRIM(username) WHEN '' THEN CONCAT(first_name,cast(rand() * 10000 as signed)) ELSE username END ;
+    
+
+    INSERT INTO User 
+    (
+        username     ,
+        first_name   ,
+        user_type_id ,
+        last_name    ,
+        email        ,
+        cellphone    ,
+        password     
+    )
+    VALUES
+    (
+        @generate_username,
+        first_name  ,
+        user_type   ,
+        last_name   ,
+        email       ,
+        cellphone   ,
+        password     
+    );
+    
+    SELECT      u.username,
+                u.first_name,
+                u.last_name,
+                u.email,
+                u.cellphone,
+                ut.type_name AS user_type
+    FROM        User u
+    INNER JOIN  UserType ut ON ut.user_type_id = u.user_type_id 
+    WHERE       user_id = LAST_INSERT_ID();
+END $$
+
+
 DELIMITER ;
