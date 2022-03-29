@@ -8,16 +8,14 @@ const router = express.Router();
 
 router.post("/login", async (req, res) => {
   try {
-    // search for user in DB
     const credentials = {
       username: req.body.username,
-      password: req.body.password,
+      password: encrypt(req.body.password),
     };
-    const encryptedPass = encrypt(credentials.password);
-    const userResult = await db.getAuthenticatedUser({
-      ...credentials,
-      password: encryptedPass,
-    });
+
+    // search for user in DB
+    const userResult = await db.getAuthenticatedUser(credentials);
+
     if (!userResult?.username) {
       res.status(401).send("Invalid credentials, please try again");
     }
@@ -40,13 +38,25 @@ router.post("/loginToken", async (req, res) => {
   try {
     const token = req.body.token;
     if (token) {
-      jwt.verify(token, process.env.API_SECRET, (error, authData) => {
+      jwt.verify(token, process.env.API_SECRET, async (error, authData) => {
         if (error) {
           console.log(error);
           return res.status(403).send(error.message);
         }
-        const user = JSON.parse(decrypt(authData.token));
 
+        const parseToken = JSON.parse(decrypt(authData.token));
+
+        const credentials = {
+          username: parseToken.username,
+          password: encrypt(parseToken.password),
+        };
+
+        // search for user in DB
+        const user = await db.getAuthenticatedUser(credentials);
+
+        if (!user?.username) {
+          return res.status(401).send("Invalid credentials, please try again");
+        }
         return res.json({ user, token, success: true });
       });
     } else {

@@ -23,7 +23,7 @@ DROP PROCEDURE IF EXISTS CreateProperty;
 CREATE PROCEDURE CreateProperty
 (
     IN title VARCHAR(80), 
-    IN description VARCHAR(300), 
+    IN description VARCHAR(255), 
     IN price INT,
     IN address VARCHAR(200)  ,
     IN coordinates VARCHAR(100),
@@ -66,7 +66,7 @@ BEGIN
 
 END $$
 
--- **************************************
+
 
 DROP PROCEDURE IF EXISTS AddPropertyImage;
 
@@ -108,6 +108,64 @@ BEGIN
     );
 
    SELECT TRUE AS SUCCESS;
+
+END $$
+
+
+-- **************************************
+
+DROP PROCEDURE IF EXISTS CreateAppointment;
+
+CREATE PROCEDURE CreateAppointment
+(
+    IN scheduled_date DATETIME,
+    IN buyer INT,
+    IN property INT
+)
+BEGIN
+
+--  Find agent that created the listing
+
+    SELECT      @listing_agent := l.agent_id,
+                @agent_name :=  u.username
+    FROM        Listing l
+    INNER JOIN  User u ON u.user_id = l.agent_id 
+    WHERE       l.property_id = property;
+
+    IF EXISTS (SELECT @listing_agent) THEN 
+         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Could not process. Contact agent to setup the appointment';
+    END IF;
+
+--  Count agent appointments for the scheduled day
+
+    SELECT      @num_appointments := count(property_id)
+    FROM        Listing l
+    INNER JOIN  Appointment a ON (
+        a.listing_id = l.property_id AND  DATE(a.scheduled_date) = DATE(scheduled_date)
+    )
+    WHERE       l.agent_id = @listing_agent 
+    GROUP BY    property_id;
+
+    SET @msg_fully_booked = CONCAT(@agent_name ,' is fully booked for this day');
+
+    IF @num_appointments > 4 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = @msg_fully_booked ;
+    END IF;
+
+    INSERT INTO Appointment
+    (
+        scheduled_date,
+        buyer_id , 
+        listing_id
+    )
+    VALUES
+    (
+        scheduled_date,
+        property, 
+        buyer
+    );
+
+   SELECT LAST_INSERT_ID() as appointment_id;
 
 END $$
 

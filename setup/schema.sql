@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS Property
     price       INT NOT NULL ,
     address     VARCHAR(200)  ,
     coordinates VARCHAR(100) NOT NULL ,
-    date_created    DATETIME DEFAULT(NOW()) ,
+    date_created    DATETIME DEFAULT CURRENT_TIMESTAMP ,
 
     PRIMARY KEY (property_id)
 );
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS Image
 CREATE TABLE IF NOT EXISTS Listing
 (
     listing_id      INT NOT NULL AUTO_INCREMENT ,
-    date_listed     DATETIME DEFAULT(NOW()) NOT NULL,
+    date_listed     DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     property_id     INT NOT NULL ,
     user_id         INT NOT NULL ,
    
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS Appointment
     appointment_id INT NOT NULL ,
     scheduled_date DATETIME NOT NULL ,
     listing_id     INT NOT NULL ,
-    status         ENUM( 'accepted', 'declined', 'postponed' ) NOT NULL ,
+    status         ENUM( 'accepted', 'declined', 'postponed', 'pending' ) DEFAULT('pending') NOT NULL ,
 
     PRIMARY KEY (appointment_id),
     FOREIGN KEY fk_listing_id (listing_id) REFERENCES Listing (listing_id)
