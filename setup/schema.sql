@@ -74,13 +74,13 @@ CREATE TABLE IF NOT EXISTS Listing
     listing_id      INT NOT NULL AUTO_INCREMENT ,
     date_listed     DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     property_id     INT NOT NULL ,
-    user_id         INT NOT NULL ,
+    agent_id         INT NOT NULL ,
    
 
 
     PRIMARY KEY (listing_id),
     FOREIGN KEY fk_property_id (property_id) REFERENCES Property (property_id),
-    FOREIGN KEY fk_user_id (user_id) REFERENCES User (user_id)
+    FOREIGN KEY fk_agent_id (agent_id) REFERENCES User (user_id)
 );
 
 
@@ -88,12 +88,14 @@ CREATE TABLE IF NOT EXISTS Listing
 
 CREATE TABLE IF NOT EXISTS Appointment
 (
-    appointment_id INT NOT NULL ,
-    scheduled_date DATETIME NOT NULL ,
+    appointment_id INT NOT NULL AUTO_INCREMENT,
+    scheduled_date DATETIME,
     listing_id     INT NOT NULL ,
-    status         ENUM( 'accepted', 'declined', 'postponed', 'pending' ) DEFAULT('pending') NOT NULL ,
+    buyer_id        INT NOT NULL ,
+    status         ENUM( 'accepted', 'declined', 'postponed', 'pending', 'completed', 'cancelled' ) DEFAULT('pending') NOT NULL ,
 
     PRIMARY KEY (appointment_id),
-    FOREIGN KEY fk_listing_id (listing_id) REFERENCES Listing (listing_id)
+    FOREIGN KEY fk_listing_id (listing_id) REFERENCES Listing (listing_id),
+    FOREIGN KEY fk_buyer_id (buyer_id) REFERENCES User (user_id)
 );
 

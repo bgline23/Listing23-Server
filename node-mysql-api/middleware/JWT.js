@@ -11,19 +11,15 @@ const verifyToken = (req, res, next) => {
 
     jwt.verify(req.token, process.env.API_SECRET, (err, authData) => {
       if (err) {
-        return res.sendStatus(403);
+        return res.status(403).send("Could not verify authorization header");
       } else {
-        req.auth = {
-          message: "prospective buyers section.",
-
-          reponse: JSON.parse(decrypt(authData.token)),
-        };
+        req.auth = JSON.parse(decrypt(authData.token))     
       }
     });
 
     next();
   } else {
-    res.sendStatus(403);
+    res.status(403).send("Authorization is required to complete the request");
   }
 };
 

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# set -e
+# Exit script on error
+set -e
 
 readonly EXPECTED_ARGS=3
 readonly E_BADARGS=65

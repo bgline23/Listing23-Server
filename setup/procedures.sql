@@ -28,7 +28,7 @@ CREATE PROCEDURE CreateProperty
     IN address VARCHAR(200)  ,
     IN coordinates VARCHAR(100),
     IN auto_create_listing BIT,
-    IN user_id INT,
+    IN agent_id INT,
     OUT new_property INT
 )
 BEGIN
@@ -55,12 +55,12 @@ BEGIN
         INSERT INTO Listing
         (
             property_id,
-            user_id
+            agent_id
         )
         VALUES
         (
             new_property,
-            user_id
+            agent_id
         );
     END IF;
 
@@ -123,7 +123,7 @@ CREATE PROCEDURE CreateAppointment
     IN property INT
 )
 BEGIN
-
+    DECLARE bookings INT;
 --  Find agent that created the listing
 
     SELECT      @listing_agent := l.agent_id,
@@ -132,23 +132,25 @@ BEGIN
     INNER JOIN  User u ON u.user_id = l.agent_id 
     WHERE       l.property_id = property;
 
-    IF EXISTS (SELECT @listing_agent) THEN 
+    IF NOT EXISTS (SELECT @listing_agent) THEN 
          SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Could not process. Contact agent to setup the appointment';
     END IF;
 
---  Count agent appointments for the scheduled day
+--  Count agent appointment bookings for the scheduled day
 
-    SELECT      @num_appointments := count(property_id)
-    FROM        Listing l
-    INNER JOIN  Appointment a ON (
-        a.listing_id = l.property_id AND  DATE(a.scheduled_date) = DATE(scheduled_date)
-    )
-    WHERE       l.agent_id = @listing_agent 
+   -- SELECT      @bookings := count(appointment_id) AS bookings
+    SELECT      count(appointment_id)
+    INTO        bookings
+    FROM        Appointment a
+    INNER JOIN  Listing l ON (
+                    a.listing_id = l.property_id AND  l.agent_id = @listing_agent 
+                )
+    WHERE       DATE(a.scheduled_date) = DATE(scheduled_date)
     GROUP BY    property_id;
 
     SET @msg_fully_booked = CONCAT(@agent_name ,' is fully booked for this day');
 
-    IF @num_appointments > 4 THEN
+    IF bookings > 3 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = @msg_fully_booked ;
     END IF;
 
@@ -161,13 +163,13 @@ BEGIN
     VALUES
     (
         scheduled_date,
-        property, 
-        buyer
+        buyer,
+        property
     );
 
    SELECT LAST_INSERT_ID() as appointment_id;
 
-END $$
+END; $$
 
 -- **************************************
 
@@ -175,14 +177,14 @@ DROP PROCEDURE IF EXISTS GetListings;
 
 CREATE PROCEDURE GetListings
 (
-    IN user_id INT,
+    IN agent_id INT,
     IN page_size INT,
     IN skip_rows INT
 )
 BEGIN
 
     
-    IF user_id = -1 THEN
+    IF agent_id = -1 THEN
             
 -- show all listings
         SELECT      ls.property_id,
@@ -206,7 +208,7 @@ BEGIN
         FROM        Listing ls
         INNER JOIN  Property pt ON pt.property_id = ls.property_id
         LEFT JOIN   Image im ON (im.property_id = pt.property_id) AND im.is_banner_photo = 1
-        WHERE       ls.user_id = user_id
+        WHERE       ls.agent_id = agent_id
         LIMIT       skip_rows, page_size;
 
     END IF;

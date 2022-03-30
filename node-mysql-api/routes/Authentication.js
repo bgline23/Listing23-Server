@@ -45,15 +45,15 @@ router.post("/loginToken", async (req, res) => {
         }
 
         const parseToken = JSON.parse(decrypt(authData.token));
+    
 
         const credentials = {
           username: parseToken.username,
-          password: encrypt(parseToken.password),
+          password: parseToken.password,
         };
-
         // search for user in DB
         const user = await db.getAuthenticatedUser(credentials);
-
+        
         if (!user?.username) {
           return res.status(401).send("Invalid credentials, please try again");
         }

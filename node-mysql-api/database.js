@@ -72,7 +72,7 @@ const createProperty = async params => {
     address: params.address,
     coords: params.coords,
     autoCreateListing: params.autoCreateListing,
-    userId: params.userId,
+    agentId: params.userId,
   };
 
   const spArguments = Object.values(record);
@@ -106,6 +106,15 @@ const registerUser = async args => {
   return result?.[0]?.[0];
 };
 
+const createAppointment = async args => {
+  const [rows] = await connection.query("CALL CreateAppointment(?,?,?)", [ 
+    args.date,
+    args.buyer,
+    args.property
+  ]);
+  
+  return rows[0][0];
+};
 export {
   getUserTypes,
   getAuthenticatedUser,
@@ -114,4 +123,5 @@ export {
   createProperty,
   getListings,
   registerUser,
+  createAppointment
 };
